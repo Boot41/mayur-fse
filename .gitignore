@@ -1,0 +1,68 @@
+# Client (React/Node.js)
+node_modules/
+/client/node_modules
+/client/.pnp
+/client/.pnp.js
+/client/coverage
+/client/build
+/client/.env
+/client/.env.local
+/client/.env.development.local
+/client/.env.test.local
+/client/.env.production.local
+/client/npm-debug.log*
+/client/yarn-debug.log*
+/client/yarn-error.log*
+
+# Server (Python/Django)
+/server/__pycache__/
+/server/*/__pycache__/
+/server/*/*/__pycache__/
+/server/*/*/*/__pycache__/
+/server/venv/
+/server/.env
+/server/.env.*
+/server/*.pyc
+/server/db.sqlite3
+/server/media/
+/server/static/
+/server/*.log
+
+# IDE/Editor specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+*.env
+
+# Python general
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Misc
+.coverage
+.pytest_cache/
+htmlcov/
+coverage/

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  django:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/app
+    environment:
+      - DEBUG=1
+    restart: always
+    networks:
+      - mynetwork  # Add this network
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - django
+    restart: always
+    environment:
+      - VITE_API_BASE_URL=http://django:8000  # Tell frontend where to find the backend
+    networks:
+      - mynetwork  # Add this network
+
+networks:
+  mynetwork:
