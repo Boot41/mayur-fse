@@ -1,49 +1,87 @@
-from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from django.contrib.auth import authenticate, login, logout
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from django.contrib.auth.models import User
 from .models import User
 from .serializers import UserSerializer
 
-# Signup API
-@api_view(['POST'])
-def signup_view(request):
-    username = request.data.get('username')
-    email = request.data.get('email')
-    password = request.data.get('password')
+class SignupView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
 
-    if User.objects.filter(email=email).exists():
-        return Response({'error': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
+        if not all([username, email, password]):
+            return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = User.objects.create_user(username=username, email=email, password=password)
-    return Response({'message': 'User created successfully', 'user': UserSerializer(user).data})
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Login API
-@api_view(['POST'])
-def login_view(request):
-    email = request.data.get('email')
-    password = request.data.get('password')
+        try:
+            user = User.objects.create_user(username=username, email=email, password=password)
+        
+            # Generate tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'message': 'User created successfully',
+                'user': UserSerializer(user).data,
+                'tokens': {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                }
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e: 
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = authenticate(request, email=email, password=password)
-    if user:
-        return Response({'message': 'Login successful', 'user': UserSerializer(user).data})
-    return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Role Selection API
-@api_view(['POST'])
-def select_role_view(request):
-    user = request.user
-    job_role = request.data.get('job_role')
+class SelectRoleView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            job_role = request.data.get('job_role')
+            specialization = request.data.get('specialization')
 
-    if not job_role:
-        return Response({'error': 'Job role is required'}, status=status.HTTP_400_BAD_REQUEST)
+            if not job_role:
+                return Response(
+                    {'error': 'Job role is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-    user.job_role = job_role
-    user.save()
-    return Response({'message': 'Job role updated successfully', 'user': UserSerializer(user).data})
+            request.user.job_role = job_role
+            request.user.specialization = specialization
+            request.user.save()
+            
+            return Response({
+                'message': 'Profile updated successfully',
+                'user': UserSerializer(request.user).data
+            })
+        except Exception as e:
+            print(f"Error in select_role_view: {str(e)}")
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-# Logout API
-@api_view(['POST'])
-def logout_view(request):
-    logout(request)
-    return Response({'message': 'Logout successful'})
+
+class HomeView(APIView):
+    permission_classes = (IsAuthenticated, )
+    def get(self, request):
+        content = {'message': 'Welcome to the JWT Authentication page using React and Django'}
+        return Response(content)
+
+class LogoutView(APIView):
+    permission_classes = (IsAuthenticated, )
+    def post(self, request):
+        try:
+            refresh_token = request.data['refresh_token']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({'message': 'Logout successful'}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({'error': 'Invalid refresh token'}, status=status.HTTP_400_BAD_REQUEST)

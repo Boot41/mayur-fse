@@ -13,7 +13,11 @@ services:
       - DEBUG=1
     restart: always
     networks:
-      - mynetwork  # Add this network
+      - mynetwork
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py shell < create_superuser.py &&
+             python manage.py runserver 0.0.0.0:8000"
 
   client:
     build:
@@ -25,9 +29,9 @@ services:
       - django
     restart: always
     environment:
-      - VITE_API_BASE_URL=http://django:8000  # Tell frontend where to find the backend
+      - VITE_API_BASE_URL=http://localhost:8000
     networks:
-      - mynetwork  # Add this network
+      - mynetwork
 
 networks:
   mynetwork:
