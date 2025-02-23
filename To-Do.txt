@@ -1,0 +1,6 @@
+Setup postgres - Connect User table with the Presentation table and display all the presentations created by the user.
+SETUP TESTS AND COVERAGE - IMPORTANT
+Cleanup code, write docs and design the frontend well.
+Setup scraping for the digests idea.
+Look for ideas for the suggestions of courses part.
+Maybe setup agentic AI to to talk with the user in Real time to assess their Presentation skills and daily SCRUM meetings sort of thing.

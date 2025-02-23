@@ -7,6 +7,7 @@ import Overview from './dashboard/Overview';
 import Projects from './dashboard/Projects';
 import Tasks from './dashboard/Tasks';
 import Settings from './dashboard/Settings';
+import Presentation from './dashboard/Presentation';
 
 const Dashboard = () => {
     const location = useLocation();
@@ -65,6 +66,15 @@ const Dashboard = () => {
                         </Nav.Item>
                         <Nav.Item>
                             <CustomNavLink 
+                                to="/dashboard/presentation" 
+                                eventKey="presentation"
+                            >
+                                <i className="bi bi-list-task me-2"></i>
+                                Presentation
+                            </CustomNavLink>
+                        </Nav.Item>
+                        <Nav.Item>
+                            <CustomNavLink 
                                 to="/dashboard/settings" 
                                 eventKey="settings"
                             >
@@ -90,6 +100,7 @@ const Dashboard = () => {
                         <Route path="/projects" element={<Projects />} />
                         <Route path="/tasks" element={<Tasks />} />
                         <Route path="/settings" element={<Settings />} />
+                        <Route path="/presentation" element={<Presentation />} />
                     </Routes>
                 </Col>
             </Row>
