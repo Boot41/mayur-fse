@@ -12,9 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True) 
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'authentication',
     'api',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
@@ -98,7 +103,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'authentication.User'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -159,7 +164,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'backend.log',
+            'filename': os.path.join(LOG_DIR, 'backend.log'),
             'formatter': 'verbose',
         },
     },

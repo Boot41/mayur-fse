@@ -4,9 +4,8 @@ from . import views
 
 urlpatterns = [
     path('home/', views.HomeView.as_view(), name='home'),
-    path('logout/', views.LogoutView.as_view(), name='logout'),
-    path('signup/', views.SignupView.as_view(), name='signup'),
-    path('select-role/', views.SelectRoleView.as_view(), name='select-role'),
-    path('groq/', views.GROQView.as_view(), name='groq'),
+    path('create-ppt/', views.CreatePPTView.as_view(), name='create-ppt'),
+    path('fetch-ppt/', views.UserPPTView.as_view(), name='fetch-ppt'),
+    path('update-ppt/<int:id>/', views.UpdatePresentationView.as_view(), name='update-ppt'),
+    path('delete-ppt/<int:id>/', views.DeletePresentationView.as_view(), name='delete-ppt'),
 ]
-

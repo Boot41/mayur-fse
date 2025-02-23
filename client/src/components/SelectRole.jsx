@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-console.log("REACHED")
 const SelectRole = () => {
     const [jobRole, setJobRole] = useState('');
     const [specialization, setSpecialization] = useState('');

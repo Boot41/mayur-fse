@@ -1,11 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from authentication.models import User
+from django.utils import timezone
 
-# Create your models here.
-class User(AbstractUser):
-    email = models.EmailField(unique=True)
-    job_role = models.CharField(max_length=100, blank=True, null=True)
-    specialization = models.CharField(max_length=100, blank=True, null=True)
+class Presentation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='presentations')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    data = models.JSONField()  # This will store the JSON format for the presentation
+    created_at = models.DateTimeField(default=timezone.now)
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]
+    def __str__(self):
+        return self.title
