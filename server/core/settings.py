@@ -152,83 +152,83 @@ if 'test' in sys.argv:
     }
 
     # Simplified logging for tests
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': True,
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-            }
-        },
-        'root': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-    }
-else:
-    # Create logs directory if it doesn't exist
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR, exist_ok=True)
+#     LOGGING = {
+#         'version': 1,
+#         'disable_existing_loggers': True,
+#         'handlers': {
+#             'console': {
+#                 'class': 'logging.StreamHandler',
+#             }
+#         },
+#         'root': {
+#             'handlers': ['console'],
+#             'level': 'INFO',
+#         },
+#     }
+# else:
+#     # Create logs directory if it doesn't exist
+#     if not os.path.exists(LOG_DIR):
+#         os.makedirs(LOG_DIR, exist_ok=True)
 
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
+#     LOGGING = {
+#         'version': 1,
+#         'disable_existing_loggers': False,
 
-        'formatters': {
-            'verbose': {
-                'format': '{levelname} {asctime} {module} {message}',
-                'style': '{',
-            },
-            'simple': {
-                'format': '{levelname} {message}',
-                'style': '{',
-            },
-        },
+#         'formatters': {
+#             'verbose': {
+#                 'format': '{levelname} {asctime} {module} {message}',
+#                 'style': '{',
+#             },
+#             'simple': {
+#                 'format': '{levelname} {message}',
+#                 'style': '{',
+#             },
+#         },
 
-        'handlers': {
-            'console': {
-                'level': 'INFO',
-                'class': 'logging.StreamHandler',
-                'formatter': 'simple',
-            },
-            'auth_file': {
-                'level': 'INFO',
-                'class': 'logging.FileHandler',
-                'filename': os.path.join(LOG_DIR, 'Authentications.log'),
-                'formatter': 'simple',
-            },
-            'api_file': {
-                'level': 'INFO',
-                'class': 'logging.FileHandler',
-                'filename': os.path.join(LOG_DIR, 'API.log'),
-                'formatter': 'simple',
-            },
-            'file': {
-                'level': 'INFO',
-                'class': 'logging.FileHandler',
-                'filename': os.path.join(LOG_DIR, 'django.log'),
-                'formatter': 'verbose',
-            },
-        },
+#         'handlers': {
+#             'console': {
+#                 'level': 'INFO',
+#                 'class': 'logging.StreamHandler',
+#                 'formatter': 'simple',
+#             },
+#             'auth_file': {
+#                 'level': 'INFO',
+#                 'class': 'logging.FileHandler',
+#                 'filename': os.path.join(LOG_DIR, 'Authentications.log'),
+#                 'formatter': 'simple',
+#             },
+#             'api_file': {
+#                 'level': 'INFO',
+#                 'class': 'logging.FileHandler',
+#                 'filename': os.path.join(LOG_DIR, 'API.log'),
+#                 'formatter': 'simple',
+#             },
+#             'file': {
+#                 'level': 'INFO',
+#                 'class': 'logging.FileHandler',
+#                 'filename': os.path.join(LOG_DIR, 'django.log'),
+#                 'formatter': 'verbose',
+#             },
+#         },
 
-        'loggers': {
-            'django': {
-                'handlers': ['console', 'file'],
-                'level': 'INFO',
-                'propagate': True,
-            },
-            'authentication': {
-                'handlers': ['auth_file', 'console'],
-                'level': 'INFO',
-                'propagate': False,
-            },
-            'api': {
-                'handlers': ['api_file', 'console'],
-                'level': 'INFO',
-                'propagate': False,
-            },
-        },
-    }
+#         'loggers': {
+#             'django': {
+#                 'handlers': ['console', 'file'],
+#                 'level': 'INFO',
+#                 'propagate': True,
+#             },
+#             'authentication': {
+#                 'handlers': ['auth_file', 'console'],
+#                 'level': 'INFO',
+#                 'propagate': False,
+#             },
+#             'api': {
+#                 'handlers': ['api_file', 'console'],
+#                 'level': 'INFO',
+#                 'propagate': False,
+#             },
+#         },
+#     }
 
 
 # Password validation

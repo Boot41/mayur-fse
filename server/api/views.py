@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 
 from authentication.models import User
 from .helpers import extract_json_from_response
-from .models import Presentation
-from .serializers import PresentationSerializer
+from .models import Presentation, Project, Task
+from .serializers import PresentationSerializer, ProjectSerializer, TaskSerializer
 
 
 import os
@@ -174,3 +174,101 @@ class DeletePresentationView(APIView):
         except Exception as e:
             logger.error("Error in delete presentation view: ", str(e))
             return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ProjectListCreateView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """Get all projects for the authenticated user."""
+        projects = Project.objects.filter(user=request.user)
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        """Create a new project for the authenticated user."""
+        serializer = ProjectSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProjectDetailView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_project(self, request, id):
+        return get_object_or_404(Project, id=id, user=request.user)
+
+    def get(self, request, id):
+        project = self.get_project(request, id)
+        serializer = ProjectSerializer(project)
+        return Response(serializer.data)
+
+    def put(self, request, id):
+        project = self.get_project(request, id)
+        serializer = ProjectSerializer(project, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        project = self.get_project(request, id)
+        project.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class TaskListCreateView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, project_id=None):
+        """Get tasks for a specific project or all tasks if no project_id."""
+        if project_id:
+            project = get_object_or_404(Project, id=project_id, user=request.user)
+            tasks = Task.objects.filter(project=project)
+        else:
+            tasks = Task.objects.filter(user=request.user)
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, project_id):
+        """Create a new task for a specific project."""
+        project = get_object_or_404(Project, id=project_id, user=request.user)
+        
+        # Ensure the request data includes required fields
+        data = request.data.copy()
+        data['project'] = project.id  # Explicitly set project
+        
+        serializer = TaskSerializer(data=data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(project=project)  # Assign user and project explicitly
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TaskDetailView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_task(self, request, id):
+        task = get_object_or_404(Task, id=id)
+        if task.project.user != request.user:  # Ensure the user owns the project
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        return task
+
+
+    def get(self, request, id):
+        task = self.get_task(request, id)
+        serializer = TaskSerializer(task)
+        return Response(serializer.data)
+
+    def put(self, request, id):
+        task = self.get_task(request, id)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        task = self.get_task(request, id)
+        task.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
