@@ -18,7 +18,8 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
-os.makedirs(LOG_DIR, exist_ok=True) 
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR, exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -157,27 +158,44 @@ LOGGING = {
 
     'handlers': {
         'console': {
-            'level': 'INFO',  # You can adjust this to DEBUG if you want more detailed logs
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
-        'file': {
+        'auth_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, 'backend.log'),
+            'filename': '/app/logs/Authentications.log',
+            'formatter': 'simple',
+        },
+        'api_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/app/logs/API.log',
+            'formatter': 'simple',
+        },
+        'file': {  #
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/app/logs/django.log',
             'formatter': 'verbose',
         },
     },
 
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',  # You can change this to DEBUG for more verbose logs
+            'handlers': ['console', 'file'],  
+            'level': 'INFO',
             'propagate': True,
         },
-        'groq_ppt': {  # This will log messages from your `generate_slide_content` view
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',  # Log at DEBUG level to capture detailed information
+        'authentication': {  # Logs authentication-related events
+            'handlers': ['auth_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'api': {  # Logs API-related events
+            'handlers': ['api_file', 'console'],
+            'level': 'INFO',
             'propagate': False,
         },
     },

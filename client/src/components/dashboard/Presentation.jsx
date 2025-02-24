@@ -59,10 +59,12 @@ const Presentation = () => {
                 { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
             );
 
-            if (data.response && data.response.slides) {
-                setSlides(data.response.slides);
-                setTalkingPoints(data.response.talking_points);
-                setPresentations((prev) => [data.response, ...prev]);
+            console.log(data);
+
+            if (data.message === "Presentation created successfully") {
+                // Fetch all presentations again to get the updated list
+                await fetchPresentations();
+                setPrompt("");
             } else {
                 alert("Error generating slides!");
             }
@@ -71,7 +73,6 @@ const Presentation = () => {
             alert("There was an error processing your request.");
         } finally {
             setLoading(false);
-            setPrompt("");
         }
     };
 
@@ -101,7 +102,7 @@ const Presentation = () => {
                             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                         }
                         .reveal h2 {
-                            color: #2c3e50;
+                            color: #FFFFFF;
                             margin-bottom: 30px;
                         }
                         .reveal ul {
@@ -109,11 +110,11 @@ const Presentation = () => {
                         }
                         .reveal li {
                             margin: 15px 0;
-                            color: #34495e;
+                            color: #ffffff;
                         }
                         .reveal li::before {
                             content: "•";
-                            color: #3498db;
+                            color: #ffffff;
                             font-weight: bold;
                             display: inline-block;
                             width: 1em;

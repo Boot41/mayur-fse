@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     volumes:
       - ./server:/app
+      - ./logs:/app/logs
     environment:
       - DEBUG=1
       - CHOKIDAR_USEPOLLING=1
