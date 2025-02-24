@@ -1,113 +1,104 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const SelectRole = () => {
-    const [jobRole, setJobRole] = useState('');
-    const [specialization, setSpecialization] = useState('');
-    const [error, setError] = useState('');
+    const [jobRole, setJobRole] = useState("");
+    const [specialization, setSpecialization] = useState("");
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
     useEffect(() => {
-        // Check if the user is authenticated
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem("access_token");
         if (!token) {
-            navigate('/login');  // Redirect to login if not authenticated
+            navigate("/login"); // Redirect to login if not authenticated
         }
     }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
+        setError("");
 
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem("access_token");
         if (!token) {
-            setError('Authentication failed. Please log in again.');
+            setError("Authentication failed. Please log in again.");
+            return;
+        }
+
+        if (!jobRole) {
+            setError("Please select a job role.");
             return;
         }
 
         try {
-            const response = await axios.post(
+            await axios.post(
                 `${API_BASE_URL}/select-role/`,
                 { job_role: jobRole, specialization: specialization },
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
                 }
             );
-
-            // Redirect the user to the homepage after successfully setting their role
-            navigate('/dashboard');
+            navigate("/dashboard"); // Redirect to dashboard on success
         } catch (err) {
             console.error("Error updating role:", err);
-            setError(err.response?.data?.error || 'Failed to update role. Please try again.');
+            setError(err.response?.data?.error || "Failed to update role. Please try again.");
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Select Your Role
-                </h2>
-            </div>
+        <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+            <div className="card shadow-lg p-4" style={{ width: "400px" }}>
+                <h2 className="text-center mb-4">Select Your Role</h2>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                    <form className="space-y-6" onSubmit={handleSubmit}>
-                        <div>
-                            <label htmlFor="jobRole" className="block text-sm font-medium text-gray-700">
-                                Job Role *
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="jobRole"
-                                    name="jobRole"
-                                    type="text"
-                                    required
-                                    value={jobRole}
-                                    onChange={(e) => setJobRole(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
+                {error && <div className="alert alert-danger">{error}</div>}
 
-                        <div>
-                            <label htmlFor="specialization" className="block text-sm font-medium text-gray-700">
-                                Specialization (Optional)
-                            </label>
-                            <div className="mt-1">
-                                <input
-                                    id="specialization"
-                                    name="specialization"
-                                    type="text"
-                                    value={specialization}
-                                    onChange={(e) => setSpecialization(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                />
-                            </div>
-                        </div>
+                <form onSubmit={handleSubmit}>
+                    {/* Job Role Dropdown */}
+                    <div className="mb-3">
+                        <label htmlFor="jobRole" className="form-label">
+                            Job Role *
+                        </label>
+                        <select
+                            id="jobRole"
+                            className="form-select"
+                            value={jobRole}
+                            onChange={(e) => setJobRole(e.target.value)}
+                            required
+                        >
+                            <option value="">Select a role...</option>
+                            <option value="Software Engineer">Software Engineer</option>
+                            <option value="Data Scientist">Data Scientist</option>
+                            <option value="Product Manager">Product Manager</option>
+                            <option value="UX Designer">UX Designer</option>
+                        </select>
+                    </div>
 
-                        {error && (
-                            <div className="text-red-600 text-sm">
-                                {error}
-                            </div>
-                        )}
+                    {/* Specialization Input */}
+                    <div className="mb-3">
+                        <label htmlFor="specialization" className="form-label">
+                            Specialization (Optional)
+                        </label>
+                        <input
+                            id="specialization"
+                            type="text"
+                            className="form-control"
+                            value={specialization}
+                            onChange={(e) => setSpecialization(e.target.value)}
+                            placeholder="e.g., Frontend, AI, Backend..."
+                        />
+                    </div>
 
-                        <div>
-                            <button
-                                type="submit"
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            >
-                                Save Role
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    {/* Submit Button */}
+                    <button type="submit" className="btn btn-primary w-100">
+                        Save Role
+                    </button>
+                </form>
             </div>
         </div>
     );

@@ -13,14 +13,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 LOG_DIR = os.path.join(BASE_DIR, 'logs')
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR, exist_ok=True)
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -141,65 +139,96 @@ DATABASES = {
     }
 }
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
+# Test configuration
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
+# Use a separate test database and logging for tests
+if 'test' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }
 
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+    # Simplified logging for tests
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': True,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            }
         },
-        'auth_file': {
+        'root': {
+            'handlers': ['console'],
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': '/app/logs/Authentications.log',
-            'formatter': 'simple',
         },
-        'api_file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': '/app/logs/API.log',
-            'formatter': 'simple',
-        },
-        'file': {  #
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': '/app/logs/django.log',
-            'formatter': 'verbose',
-        },
-    },
+    }
+else:
+    # Create logs directory if it doesn't exist
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR, exist_ok=True)
 
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],  
-            'level': 'INFO',
-            'propagate': True,
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {message}',
+                'style': '{',
+            },
+            'simple': {
+                'format': '{levelname} {message}',
+                'style': '{',
+            },
         },
-        'authentication': {  # Logs authentication-related events
-            'handlers': ['auth_file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
+
+        'handlers': {
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'simple',
+            },
+            'auth_file': {
+                'level': 'INFO',
+                'class': 'logging.FileHandler',
+                'filename': os.path.join(LOG_DIR, 'Authentications.log'),
+                'formatter': 'simple',
+            },
+            'api_file': {
+                'level': 'INFO',
+                'class': 'logging.FileHandler',
+                'filename': os.path.join(LOG_DIR, 'API.log'),
+                'formatter': 'simple',
+            },
+            'file': {
+                'level': 'INFO',
+                'class': 'logging.FileHandler',
+                'filename': os.path.join(LOG_DIR, 'django.log'),
+                'formatter': 'verbose',
+            },
         },
-        'api': {  # Logs API-related events
-            'handlers': ['api_file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
+
+        'loggers': {
+            'django': {
+                'handlers': ['console', 'file'],
+                'level': 'INFO',
+                'propagate': True,
+            },
+            'authentication': {
+                'handlers': ['auth_file', 'console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+            'api': {
+                'handlers': ['api_file', 'console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
         },
-    },
-}
+    }
 
 
 # Password validation
