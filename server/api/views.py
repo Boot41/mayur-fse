@@ -5,6 +5,7 @@ from rest_framework import status
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 
 from dotenv import load_dotenv
 
@@ -18,6 +19,7 @@ import os
 import json
 import logging
 import groq
+import re
 
 
 load_dotenv()
@@ -272,3 +274,165 @@ class TaskDetailView(APIView):
         task = self.get_task(request, id)
         task.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class GetTranscriptView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """Fetches a mock transcript from a file inside the 'data' folder."""
+        mock_transcript = '{"conversations": [{"timestamp": "2025-02-25T02:57:31.873907","speaker": "Bot","text": "Hey, ready to tell me your completed tasks and your new tasks?"},{"timestamp": "2025-02-25T02:57:39.144934","speaker": "User","text": "Yeah."},{"timestamp": "2025-02-25T02:57:46.606046","speaker": "User","text": "So I\'ve pasted a front end, and I\'ve created a dataset."},{"timestamp": "2025-02-25T02:58:10.123456","speaker": "User","text": "I also set up the API for fetching presentation data and integrated it with the frontend."},{"timestamp": "2025-02-25T02:58:18.654321","speaker": "User","text": "And I implemented authentication using JWT tokens in Django."},{"timestamp": "2025-02-25T02:58:25.789012","speaker": "User","text": "So there\'s nothing left?"},{"timestamp": "2025-02-25T02:58:27.453830","speaker": "User","text": "Uh,"},{"timestamp": "2025-02-25T02:58:30.123456","speaker": "User","text": "Oh, my project is almost complete."},{"timestamp": "2025-02-25T02:58:35.987654","speaker": "Bot","text": "That’s great! Do you have any final tasks left to polish it up?"},{"timestamp": "2025-02-25T02:58:42.654321","speaker": "User","text": "Actually, yeah. I need to refine the UI design, add error handling, and improve the presentation generation quality."},{"timestamp": "2025-02-25T02:58:50.987654","speaker": "User","text": "Also, I need to test the entire flow end-to-end and fix any issues that come up."},{"timestamp": "2025-02-25T02:58:55.321987","speaker": "Bot","text": "Nice! Once you finish those, your project should be solid. Let me know if you need help."},{"timestamp": "2025-02-25T02:59:02.654321","speaker": "User","text": "Will do. Thanks!"}]}'
+        # if not os.path.exists(transcript_path):
+        #     logger.error("Transcript file not found")
+        #     return Response({"error": "Transcript file not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            # with open(transcript_path, "r", encoding="utf-8") as file:
+            #     mock_transcript = file.read()
+
+            return Response(json.loads(mock_transcript), status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error reading transcript file: {str(e)}")
+            return Response({"error": "Failed to read transcript file"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class ProcessTranscriptView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        """Processes the transcript, extracts tasks, and updates the DB accordingly."""
+        try:
+            data = json.loads(request.body)
+            transcript = data.get("transcript")
+
+            if not transcript:
+                return Response({"error": "Transcript is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            logger.info(f"Received transcript: {transcript}")
+
+            # Call LLM to analyze transcript
+            tasks_data = self.analyze_transcript_with_llm(transcript)
+            
+            logger.info(f"Extracted tasks: {tasks_data}")
+
+            if not tasks_data:
+                return Response({"error": "No tasks extracted from LLM"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            completed_tasks = tasks_data.get("completed_tasks", [])
+            new_tasks = tasks_data.get("new_tasks", [])
+
+            # Process tasks in the database
+            self.process_tasks(request.user, completed_tasks, new_tasks)
+
+            return Response(
+                {
+                    "message": "Tasks processed successfully",
+                    "completed_tasks": completed_tasks,
+                    "new_tasks": new_tasks,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON in request body")
+            return Response({"error": "Invalid JSON in request body"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error in ProcessTranscriptView: {str(e)}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def analyze_transcript_with_llm(self, transcript):
+        """Calls LLM to extract completed and new tasks from the transcript."""
+        template = f"""
+        You are an AI assistant analyzing a conversation transcript. Your task is to:
+        - Identify **tasks the user has completed**.
+        - Identify **new tasks the user should work on**.
+
+        ### **Response Format (ONLY JSON)**
+        ```json
+        {{
+            "completed_tasks": ["Completed Task 1", "Completed Task 2"],
+            "new_tasks": [
+                {{"title": "New Task 1", "description": "Details about Task 1"}},
+                {{"title": "New Task 2", "description": "Details about Task 2"}}
+            ]
+        }}
+        ```
+
+        **Transcript:**  
+        {transcript}
+        """
+
+        try:
+            chat_completion = client.chat.completions.create(
+                messages=[{"role": "user", "content": template}],
+                model="llama3-8b-8192",
+            )
+
+            response = chat_completion.choices[0].message.content
+            logger.info(f"Raw LLM Response: {response}")
+
+            # Extract JSON properly
+            match = re.search(r'```json\n(.*?)\n```', response, re.DOTALL)
+            if match:
+                response_cleaned = match.group(1).strip()
+            else:
+                # Fallback: Try to extract anything that looks like JSON
+                response_cleaned = re.search(r'{.*}', response, re.DOTALL)
+                response_cleaned = response_cleaned.group(0).strip() if response_cleaned else ""
+
+            if not response_cleaned:
+                logger.error(f"LLM returned invalid JSON: {response}")
+                return {"completed_tasks": [], "new_tasks": []}
+
+            logger.info(f"Extracted JSON from LLM: {response_cleaned}")
+
+            # Parse JSON
+            parsed_response = json.loads(response_cleaned)
+
+            return parsed_response
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON from LLM: {str(e)} | Response: {response}")
+            return {"completed_tasks": [], "new_tasks": []}
+        except Exception as e:
+            logger.error(f"Error in LLM analysis: {str(e)}")
+            return {"completed_tasks": [], "new_tasks": []}
+
+    def process_tasks(self, user, completed_tasks, new_tasks):
+        """Updates the database with completed and new tasks."""
+        project = Project.objects.filter(user=user).first()
+
+        if not project:
+            logger.error(f"No active project found for user {user}. Cannot assign tasks.")
+            return Response({"error": "No active project found for user."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Process completed tasks
+        for task_title in completed_tasks:
+            task = Task.objects.filter(user=user, project=project, title=task_title).first()
+            if task:
+                if task.status != "COMPLETED":
+                    task.status = "COMPLETED"
+                    task.save()
+                    logger.info(f"Task '{task_title}' marked as completed.")
+            else:
+                Task.objects.create(user=user, project=project, title=task_title, status="COMPLETED")
+                logger.info(f"Completed task '{task_title}' created.")
+
+        # Process new tasks
+        for task_data in new_tasks:
+            task, created = Task.objects.get_or_create(
+                user=user,
+                project=project,
+                title=task_data["title"],
+                defaults={
+                    "description": task_data["description"],
+                    "status": "TODO"
+                },
+            )
+            if created:
+                logger.info(f"New task added: {task.title}")
+            else:
+                logger.info(f"Task '{task.title}' already exists. Skipping duplicate.")
+

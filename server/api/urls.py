@@ -16,4 +16,8 @@ urlpatterns = [
     path('tasks/', views.TaskListCreateView.as_view(), name='task-list'),  # For getting all tasks
     path('projects/<int:project_id>/tasks/', views.TaskListCreateView.as_view(), name='project-tasks'),
     path('tasks/<int:id>/', views.TaskDetailView.as_view(), name='task-detail'),
+
+    # Transcript URLs
+    path('transcript/', views.GetTranscriptView.as_view(), name='get-transcript'),
+    path('transcript/process/', views.ProcessTranscriptView.as_view(), name='process-transcript'),
 ]

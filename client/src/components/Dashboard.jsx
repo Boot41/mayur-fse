@@ -8,6 +8,7 @@ import Projects from './dashboard/Projects';
 import Tasks from './dashboard/Tasks';
 import Settings from './dashboard/Settings';
 import Presentation from './dashboard/Presentation';
+import TaskTracker from './dashboard/TaskTracker';
 
 const Dashboard = () => {
     const location = useLocation();
@@ -39,15 +40,6 @@ const Dashboard = () => {
                     <Nav className="flex-column">
                         <Nav.Item>
                             <CustomNavLink 
-                                to="/dashboard/overview" 
-                                eventKey="overview"
-                            >
-                                <i className="bi bi-house-door me-2"></i>
-                                Overview
-                            </CustomNavLink>
-                        </Nav.Item>
-                        <Nav.Item>
-                            <CustomNavLink 
                                 to="/dashboard/projects" 
                                 eventKey="projects"
                             >
@@ -75,6 +67,15 @@ const Dashboard = () => {
                         </Nav.Item>
                         <Nav.Item>
                             <CustomNavLink 
+                                to="/dashboard/tasktracker" 
+                                eventKey="tasktracker"
+                            >
+                                <i className="bi bi-list-task me-2"></i>
+                                Task Tracker
+                            </CustomNavLink>
+                        </Nav.Item>
+                        <Nav.Item>
+                            <CustomNavLink 
                                 to="/dashboard/settings" 
                                 eventKey="settings"
                             >
@@ -94,13 +95,13 @@ const Dashboard = () => {
                 {/* Main Content */}
                 <Col md={10} className="p-4">
                     <Routes>
-                        {/* Redirect from /dashboard to /dashboard/overview */}
-                        <Route path="/" element={<Navigate to="/dashboard/overview" replace />} />
-                        <Route path="/overview" element={<Overview />} />
+                        {/* Redirect from /dashboard to /dashboard/projects */}
+                        <Route path="/" element={<Navigate to="/dashboard/projects" replace />} />
                         <Route path="/projects" element={<Projects />} />
                         <Route path="/tasks" element={<Tasks />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/presentation" element={<Presentation />} />
+                        <Route path="/tasktracker" element={<TaskTracker />} />
                     </Routes>
                 </Col>
             </Row>
